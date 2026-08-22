@@ -1,6 +1,6 @@
-import ampq from 'amqplib'
+import amqp from 'amqplib'
 
-let channel: ampq.Channel;
+let channel: amqp.Channel;
 
 export const connectRabbitMQ = async ()=> {
     try{
@@ -12,7 +12,7 @@ export const connectRabbitMQ = async ()=> {
             throw new Error('Missing RabbitMQ configuration');
         }
 
-        const connection = await ampq.connect({
+        const connection = await amqp.connect({
             protocol: "amqp",
             hostname,
             port: 5672,
