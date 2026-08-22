@@ -37,13 +37,13 @@ export const startSendOtpConsumer = async()=>{
                     host: "smtp.gmail.com",
                     port: 465,
                     auth: {
-                        user: process.env.USER,
-                        pass: process.env.PASSWORD
+                            user: process.env.SMTP_USER,
+                            pass: process.env.SMTP_PASSWORD
                     }
                 });
 
                 await transporter.sendMail({
-                    from:"",
+                        from: process.env.SMTP_USER,
                     to,
                     subject,
                     text: body,
