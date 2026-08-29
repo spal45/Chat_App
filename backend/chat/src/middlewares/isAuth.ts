@@ -1,14 +1,17 @@
 import type { NextFunction, Request, Response } from "express";
-import type { IUser } from "../model/User.js";
-import jwt, { type JwtPayload } from 'jsonwebtoken'
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
-
+interface IUser extends Document{
+    _id: string;
+    name: string;
+    email: string;
+}
 
 export interface AuthenticatedRequest extends Request {
     user?: IUser | null;
 }
 
-export const isAuth = async(req:AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> =>{
+export const isAuth = async(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try{
         const authHeader = req.headers.authorization
 
@@ -33,7 +36,7 @@ export const isAuth = async(req:AuthenticatedRequest, res: Response, next: NextF
         req.user = decodedValue.user;
 
         next();
-    }catch(error){
+    }catch(err){
         res.status(401).json({
             message: "Please Login - JWT error"
         })
