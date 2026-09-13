@@ -19,7 +19,7 @@ const page = () => {
         setLoading(true);
 
         try{
-            const {data} = await axios.post(`$${user_service}/api/v1/login`,{
+            const {data} = await axios.post(`${user_service}/api/v1/login`,{
                 email,
             })
             toast.success(data.message)

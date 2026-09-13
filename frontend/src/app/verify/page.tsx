@@ -1,5 +1,5 @@
 import Loading from "@/component/Loading"
-import VerifyOtp from "@/component/verifyOtp"
+import VerifyOtp from "@/component/VerifyOtp"
 import { Suspense } from "react"
 
 const verifyPage = () => {    

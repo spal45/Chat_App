@@ -14,6 +14,7 @@ interface ChatSidebarProps {
     selectedUser: string | null;
     setSelectedUser: (userId: string | null) => void;
     handleLogout: () => void;
+    createChat: (user: User) => void;
 }
 
 const ChatSidebar = ({
@@ -26,7 +27,8 @@ const ChatSidebar = ({
     chats,
     selectedUser,
     setSelectedUser,
-    handleLogout
+    handleLogout,
+    createChat
 }: ChatSidebarProps) => {
     const [searchQuery, setSearchQuery] = useState("");
     return (
@@ -70,11 +72,13 @@ const ChatSidebar = ({
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
+
+                        {/* User list */}
                         <div className="space-y-2 overflow-y-auto h-full pb-4">
                             {
                                 users?.filter((u) => u._id !== loggedInUser?._id && u.name.toLowerCase().includes(searchQuery.toLowerCase()))
                                     .map((u) => (<button key={u._id} className="w-full text-left p-4 rounded-lg border border-gray-700 hover:border-gray-600
-                                hover:bg-gray-800 transition-colors">
+                                hover:bg-gray-800 transition-colors" onClick={() => createChat(u)}>
                                         <div className="flex items-center gap-3">
                                             <div className="relative">
                                                 <UserCircle className="w-6 h-6 text-gray-300" />
@@ -99,7 +103,7 @@ const ChatSidebar = ({
                                     const isSentByMe = latestMessage?.sender === loggedInUser?._id;
                                     const unseenCount = chat.chat.unseenCount || 0;
 
-                                    return (<button key={chat.chat_id} onClick={() => {
+                                    return <button key={chat.chat._id} onClick={() => {
                                         setSelectedUser(chat.chat._id);
                                         setSidebarOpen(false);
                                     }} className={`w-full text-left p-4 rounded-lg transition-colors 
@@ -130,7 +134,7 @@ const ChatSidebar = ({
                                                 }
                                             </div>
                                         </div>
-                                    </button>);
+                                    </button>
                                 })}
                             </div>
                         ) : (
