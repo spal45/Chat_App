@@ -35,7 +35,7 @@ const ChatSidebar = ({
     const [searchQuery, setSearchQuery] = useState("");
     return (
         <aside className={`fixed z-20 sm:static top-0 left-0 h-screen w-80 bg-gray-900 border-r border-gray-700 transform 
-    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 transition-transform duration-300 flex-col`}>
+    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 transition-transform duration-300 flex flex-col`}>
             <div className="p-6 border-b border-gray-700">
                 <div className="sm:hidden flex justify-end mb-0">
                     <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-gray-700 rounded-lg transition-colors">

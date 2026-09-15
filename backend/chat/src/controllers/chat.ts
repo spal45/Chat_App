@@ -62,7 +62,12 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
 
         try {
             const { data } = await axios.get(
-                `${process.env.USER_SERVICE}/api/v1/user${otherUserId}`
+                `${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`,
+                {
+                    headers: {
+                        Authorization: req.headers.authorization!,
+                    },
+                }
             );
 
             return {
@@ -82,7 +87,6 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
                     latestMessage: chat.latestMessage || null,
                     unseenCount,
                 }
-
             }
         };
     }))
@@ -251,7 +255,7 @@ export const getMessagesByChat = TryCatch(
 
 
         const isUserInChat = chat.users.some(
-            (userId) => userId.toString() === userId.toString()
+            (chatUserId) => chatUserId.toString() === userId.toString()
         );
         if (!isUserInChat) {
             res.status(403).json({
@@ -281,7 +285,12 @@ export const getMessagesByChat = TryCatch(
 
         try{
             const { data } = await axios.get(
-                `${process.env.USER_SERVICE}/api/v1/user${otherUserId}`
+                `${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`,
+                {
+                    headers: {
+                        Authorization: req.headers.authorization!,
+                    },
+                }
             );
 
             if(!otherUserId){

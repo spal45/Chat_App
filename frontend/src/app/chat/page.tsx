@@ -13,7 +13,8 @@ import MessageInput from '@/component/MessageInput';
 import { SocketData } from '@/context/SocketContext';
 
 export interface Message {
-  id: string;
+  id?: string;
+  _id?: string;
   chatId: string;
   sender: string;
   text?: string;
@@ -81,7 +82,7 @@ const ChatApp = () => {
   }
 
   const moveChatToTop = (chatId: string, newMessage: any, updatedUnseenCount=true)=>{
-    setChats((prev)=>{
+    setChats?.((prev)=>{
       if(!prev) return null;
 
       const updatedChats = [...prev]
@@ -112,7 +113,7 @@ const ChatApp = () => {
   }
 
   const resetUnseenCount = (chatId: string)=>{
-    setChats((prev)=>{
+    setChats?.((prev)=>{
       if(!prev) return null;
 
       return prev.map((chat)=>{
@@ -199,7 +200,7 @@ const ChatApp = () => {
       setMessages((prev)=>{
         const currentMessages = prev || []
         const messageExist = currentMessages.some(
-          (msg) => msg.id === data.message._id
+          (msg) => (msg._id ?? msg.id) === data.message._id
         );
 
         if(!messageExist){
@@ -258,7 +259,7 @@ const ChatApp = () => {
         setMessages((prev)=>{
           const currentMessages = prev || []
           const messageExists = currentMessages.some(
-            (msg)=> msg._id === message._id
+            (msg)=> (msg._id ?? msg.id) === message._id
           )
 
           if(!messageExists){
@@ -281,7 +282,7 @@ const ChatApp = () => {
         setMessages((prev)=>{
           if(!prev) return null;
           return prev.map((msg)=>{
-            if(msg.sender === loggedInUser?._id && data.messageIds && data.nessageIds.includes(msg?._id)){
+            if(msg.sender === loggedInUser?._id && data.messageIds && data.messageIds.includes(msg?.id)){
               return{
                 ...msg,
                 seen: true,
@@ -350,7 +351,7 @@ const ChatApp = () => {
 
   if(loading) return <Loading/>;
   return (
-    <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="h-screen bg-gray-900 text-white relative overflow-hidden flex">
       <ChatSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
@@ -365,7 +366,7 @@ const ChatApp = () => {
         createChat={createChat}
         onlineUsers={onlineUsers}
       />
-      <div className="flex-1 flex-flex-col justify-between p-4 backdrop-blur-xl bg-white/5 border border-white/10">
+      <div className="flex-1 min-h-0 flex flex-col p-4 backdrop-blur-xl bg-white/5 border border-white/10">
         <ChatHeader user={user} setSidebarOpen={setSidebarOpen} isTyping={isTyping} onlineUsers={onlineUsers}/>
         <ChatMessages selectedUser={selectedUser} messages={messages} loggedInUser={loggedInUser} />
         <MessageInput selectedUser={selectedUser} message={message} setMessage={handleTyping} handleMessageSend={handleMessageSend}/> 

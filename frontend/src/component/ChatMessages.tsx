@@ -19,10 +19,11 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
     if (!messages) return [];
     const seen = new Set();
     return messages.filter((message) => {
-      if (seen.has(message.id)) {
+      const messageId = message._id ?? message.id;
+      if (!messageId || seen.has(messageId)) {
         return false;
       }
-      seen.add(message.id);
+      seen.add(messageId);
       return true;
     })
   }, [messages]);
@@ -33,15 +34,15 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
     }
   }, [selectedUser, uniqueMessages,uniqueMessages]);
   return (
-    <div className="flex-1 overflow-hidden">
-      <div className="h-full. max-h-[calc(100vh -215px)] overflow-y-auto p-2 space-y-2 custom-scroll">
+    <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="h-full overflow-y-auto p-2 space-y-2 custom-scroll">
         {
           !selectedUser ? <p className="text-gray-400 text-center mt-20">Select a conversation to start chatting.</p> :
           <>
           {
             uniqueMessages?.map((e,i) => {
               const isSentByMe = e.sender === loggedInUser?._id;
-              const uniqueKey = `${e.id}-${i}`;
+              const uniqueKey = `${e._id ?? e.id}-${i}`;
 
               return (
                 <div className={`flex flex-col gap-1 mt-2 ${

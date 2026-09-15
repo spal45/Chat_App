@@ -102,13 +102,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     async function fetchUsers() {
         const token = Cookies.get("token");
         try{
-            const {data} = await axios.get(`${user_service}/api/v1/users`,{
+            const {data} = await axios.get(`${user_service}/api/v1/user/all`,{
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
             setUsers(data);
+            console.log("saasadd",data)
         }catch(error){
             console.log(error);
         }
