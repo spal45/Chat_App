@@ -37,7 +37,7 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
     <div className="flex-1 min-h-0 overflow-hidden">
       <div className="h-full overflow-y-auto p-2 space-y-2 custom-scroll">
         {
-          !selectedUser ? <p className="text-gray-400 text-center mt-20">Select a conversation to start chatting.</p> :
+          !selectedUser ? <p className="text-text-muted text-center mt-20">Select a conversation to start chatting.</p> :
           <>
           {
             uniqueMessages?.map((e,i) => {
@@ -49,7 +49,7 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
                   isSentByMe ? 'items-end' : 'items-start'
                 }`}
                 key={uniqueKey}>
-                  <div className={`rounded-lg p-3 max-w-sm ${isSentByMe ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white'}`}>
+                  <div className={`rounded-lg p-3 max-w-sm ${isSentByMe ? 'bg-accent text-text-primary' : 'bg-card text-text-primary'}`}>
                     {
                       e.messageType === 'image' && e.image && (
                         <div className="relative group">
@@ -60,7 +60,7 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
                     {e.text && <p className="mt-1">{e.text}</p>}
                   </div>
 
-                  <div className={`flex items-center gap-1 text-xs text-gray-400 ${
+                  <div className={`flex items-center gap-1 text-xs text-text-muted ${
                     isSentByMe ? "pr-2 flex-row-reverse" : "pl-2"
                   }`}>
                     <span>
@@ -69,12 +69,12 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
                     {
                       isSentByMe && <div className="flex items-center ml-1">
                         {
-                          e.seen ? <div className="flex items-center gap-1 text-blue-400">
+                          e.seen ? <div className="flex items-center gap-1 text-accent-soft">
                             <CheckCheck className="w-3 h-3"/>
                             {
                               e.seenAt && <span>{moment(e.seenAt).format("hh:mm A")}</span>
                             }
-                          </div>:<Check className="w-3 h-3 text-gray-500" />
+                          </div>:<Check className="w-3 h-3 text-text-muted" />
                         }
                       </div>
                     }

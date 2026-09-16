@@ -351,7 +351,7 @@ const ChatApp = () => {
 
   if(loading) return <Loading/>;
   return (
-    <div className="h-screen bg-gray-900 text-white relative overflow-hidden flex">
+    <div className="h-screen bg-bg text-text-primary relative overflow-hidden flex">
       <ChatSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 

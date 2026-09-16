@@ -34,27 +34,27 @@ const page = () => {
     if(userLoading) return <Loading/>
     if(isAuth) return redirect('/chat')
     return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-bg flex items-center justify-center p-4">
             <div className="max-w-md w-full">
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-8">
+                <div className="bg-panel border border-line rounded-lg p-8">
                     <div className="text-center mb-8">
-                        <div className="mx-auto w-20 h-20 bg-blue-600 rounded-lg flex items-center justify-center mb-6">
-                            <Mail size={40} className="text-white" />
+                        <div className="mx-auto w-20 h-20 bg-accent rounded-lg flex items-center justify-center mb-6">
+                            <Mail size={40} className="text-text-primary" />
                         </div>
-                        <h1 className="text-4xl font-bold text-white mb-3">
+                        <h1 className="text-4xl font-bold text-text-primary mb-3">
                             Welcome To ChatApp
                         </h1>
-                        <p className="text-gray-300 text-lg">
+                        <p className="text-text-secondary text-lg">
                             Enter your email to continue your journey
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                            <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">Email Address</label>
                             <input  type="email" 
                                     id="email" 
-                                    className="w-full px-4 py-4 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400" 
+                                    className="w-full px-4 py-4 bg-card border border-line rounded-lg text-text-primary placeholder-text-muted" 
                                     placeholder="Enter Your Email Address"
                                     value={email}
                                     onChange={e=>setEmail(e.target.value)} 
@@ -62,7 +62,7 @@ const page = () => {
                                     />
                         </div>
                         <button type="submit" 
-                                className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 
+                                className="w-full bg-accent text-text-primary py-4 px-6 rounded-lg font-semibold hover:bg-accent-hover 
                                 disabled:opac50 
                                 disabled:cursor-not-allowed"
                                 disabled={loading}
