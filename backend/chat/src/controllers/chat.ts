@@ -10,13 +10,6 @@ export const createNewChat = TryCatch(
         const userId = req.user?._id;
         const { otherUserId } = req.body
 
-        if (!otherUserId) {
-            res.status(400).json({
-                message: "Other userid is required",
-            })
-            return;
-        }
-
         const existingChat = await Chat.findOne({
             users: { $all: [userId, otherUserId], $size: 2 },
         })
@@ -104,13 +97,6 @@ export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
     if (!senderId) {
         res.status(401).json({
             message: "unauthorized",
-        });
-        return;
-    }
-
-    if (!chatId) {
-        res.status(400).json({
-            message: "ChatId Required",
         });
         return;
     }

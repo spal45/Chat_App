@@ -1,9 +1,11 @@
 import express from "express"
 import dotenv from "dotenv"
+import helmet from "helmet"
 import connectDb from "./config/db.js"
 import { createClient } from "redis";
 import userRoutes from './routes/user.js'
 import { connectRabbitMQ } from "./config/rabbitmq.js";
+import { apiLimiter } from "./config/rateLimiter.js";
 import cors from 'cors'
 
 
@@ -25,13 +27,14 @@ const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
     .map((origin) => origin.trim());
 
 const app = express()
+app.use(helmet());
 app.use(express.json());
 
 app.use(cors({
     origin: allowedOrigins,
 }));
 
-app.use("/api/v1", userRoutes);
+app.use("/api/v1", apiLimiter, userRoutes);
 
 const port = process.env.PORT || 5003;
 

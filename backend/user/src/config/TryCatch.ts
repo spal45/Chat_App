@@ -5,8 +5,11 @@ const TryCatch = (handler: RequestHandler): RequestHandler => {
         try{
             await handler(req, res, next)
         }catch(error){
+            console.error(error);
             res.status(500).json({
-                message: error instanceof Error ? error.message : String(error)
+                message: process.env.NODE_ENV === "development"
+                    ? (error instanceof Error ? error.message : String(error))
+                    : "Something went wrong. Please try again later."
             })
         }
     }

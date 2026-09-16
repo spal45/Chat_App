@@ -49,13 +49,6 @@ export const loginUser = TryCatch(async(req,res)=>{
 export const verifyUser = TryCatch(async(req,res)=>{
     const {email, otp:enteredOtp} = req.body;
 
-    if(!email || !enteredOtp){
-        res.status(400).json({
-            message: "Email and OTP required",
-        })
-        return;
-    }
-
     const otpKey = `otp:${email}`
     const attemptsKey = `otp:attempts:${email}`
 
