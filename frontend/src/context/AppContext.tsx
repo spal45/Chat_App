@@ -109,7 +109,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             });
 
             setUsers(data);
-            console.log("saasadd",data)
         }catch(error){
             console.log(error);
         }
