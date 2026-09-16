@@ -30,13 +30,16 @@ export interface Message {
 
 const ChatApp = () => {
   const {
-    loading, 
-    isAuth, 
-    logoutUser, 
-    chats, 
-    user: loggedInUser, 
-    users, 
-    fetchChats, 
+    loading,
+    isAuth,
+    logoutUser,
+    chats,
+    hasMoreChats,
+    loadingMoreChats,
+    user: loggedInUser,
+    users,
+    fetchChats,
+    fetchMoreChats,
     setChats
   } = useAppData();
 
@@ -46,6 +49,8 @@ const ChatApp = () => {
   const [message, setMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showAllUser, setShowAllUser] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -64,20 +69,48 @@ const ChatApp = () => {
   async function fetchChat() {
     const token = Cookies.get("token");
     try{
-      const {data} = await axios.get(`${chat_service}/api/v1/message/${selectedUser}`,
+      const {data} = await axios.get(`${chat_service}/api/v1/message/${selectedUser}?limit=30`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
       setMessages(data.messages);
+      setHasMoreMessages(data.hasMore);
       setUser(data.user)
       await fetchChats?.();
     }catch(error){
       console.log(error);
       toast.error("Failed to load messages");
+    }
+  }
+
+  async function fetchOlderMessages() {
+    if(!selectedUser || !hasMoreMessages || loadingOlderMessages) return;
+
+    const oldestMessage = messages?.[0];
+    const oldestMessageId = oldestMessage?._id ?? oldestMessage?.id;
+    if(!oldestMessageId) return;
+
+    setLoadingOlderMessages(true);
+    const token = Cookies.get("token");
+    try{
+      const {data} = await axios.get(`${chat_service}/api/v1/message/${selectedUser}?before=${oldestMessageId}&limit=30`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setMessages((prev) => [...data.messages, ...(prev ?? [])]);
+      setHasMoreMessages(data.hasMore);
+    }catch(error){
+      console.log(error);
+    }finally{
+      setLoadingOlderMessages(false);
     }
   }
 
@@ -327,6 +360,7 @@ const ChatApp = () => {
 
   useEffect(()=>{
     if(selectedUser){
+      setHasMoreMessages(true)
       fetchChat();
       setIsTyping(false)
 
@@ -360,15 +394,25 @@ const ChatApp = () => {
         users={users ?? null} 
         loggedInUser={loggedInUser} 
         chats={chats ?? null}
-        selectedUser={selectedUser} 
-        setSelectedUser={setSelectedUser} 
+        hasMoreChats={hasMoreChats}
+        loadingMoreChats={loadingMoreChats}
+        onLoadMoreChats={fetchMoreChats}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
         handleLogout={handleLogout}
         createChat={createChat}
         onlineUsers={onlineUsers}
       />
       <div className="flex-1 min-h-0 flex flex-col p-4 backdrop-blur-xl bg-white/5 border border-white/10">
         <ChatHeader user={user} setSidebarOpen={setSidebarOpen} isTyping={isTyping} onlineUsers={onlineUsers}/>
-        <ChatMessages selectedUser={selectedUser} messages={messages} loggedInUser={loggedInUser} />
+        <ChatMessages
+          selectedUser={selectedUser}
+          messages={messages}
+          loggedInUser={loggedInUser}
+          hasMore={hasMoreMessages}
+          loadingOlder={loadingOlderMessages}
+          onLoadOlder={fetchOlderMessages}
+        />
         <MessageInput selectedUser={selectedUser} message={message} setMessage={handleTyping} handleMessageSend={handleMessageSend}/> 
       </div>
     </div>

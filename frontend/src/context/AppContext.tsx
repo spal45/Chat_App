@@ -41,7 +41,10 @@ interface AppContextType {
     logoutUser?: () => Promise<void>;
     fetchUsers?: () => Promise<void>;
     fetchChats?: () => Promise<void>;
+    fetchMoreChats?: () => Promise<void>;
     chats?: Chats[] | null;
+    hasMoreChats?: boolean;
+    loadingMoreChats?: boolean;
     users?: User[] | null;
     setChats?: React.Dispatch<React.SetStateAction<Chats[] | null>>;
 }
@@ -83,18 +86,48 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     const [chats, setChats] = useState<Chats[] | null>(null)
+    const [hasMoreChats, setHasMoreChats] = useState(true)
+    const [loadingMoreChats, setLoadingMoreChats] = useState(false)
+    const [chatsPage, setChatsPage] = useState(1)
+    const CHATS_PAGE_SIZE = 20;
+
     async function fetchChats() {
         const token = Cookies.get("token");
         try{
-            const {data} = await axios.get(`${chat_service}/api/v1/chat/all`,{
+            const {data} = await axios.get(`${chat_service}/api/v1/chat/all?page=1&limit=${CHATS_PAGE_SIZE}`,{
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
             setChats(data.chats);
+            setHasMoreChats(data.hasMore);
+            setChatsPage(1);
         }catch(error){
             console.log(error);
+        }
+    }
+
+    async function fetchMoreChats() {
+        if(!hasMoreChats || loadingMoreChats) return;
+
+        const token = Cookies.get("token");
+        const nextPage = chatsPage + 1;
+        setLoadingMoreChats(true);
+        try{
+            const {data} = await axios.get(`${chat_service}/api/v1/chat/all?page=${nextPage}&limit=${CHATS_PAGE_SIZE}`,{
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setChats((prev) => [...(prev ?? []), ...data.chats]);
+            setHasMoreChats(data.hasMore);
+            setChatsPage(nextPage);
+        }catch(error){
+            console.log(error);
+        }finally{
+            setLoadingMoreChats(false);
         }
     }
 
@@ -122,7 +155,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     },[]);
 
     return(
-        <AppContext.Provider value={{user, setUser, isAuth, setIsAuth, loading, logoutUser, fetchUsers, fetchChats, chats, users, setChats}}>
+        <AppContext.Provider value={{user, setUser, isAuth, setIsAuth, loading, logoutUser, fetchUsers, fetchChats, fetchMoreChats, chats, hasMoreChats, loadingMoreChats, users, setChats}}>
             {children}
             <Toaster/>
         </AppContext.Provider>

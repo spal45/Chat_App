@@ -14,7 +14,11 @@ const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
     .split(",")
     .map((origin) => origin.trim());
 
-app.use(helmet());
+// hsts disabled: this service is always plain HTTP (no TLS listener here).
+// Sending HSTS over HTTP makes Chrome force-upgrade localhost dev traffic
+// to HTTPS and fail outright. If this ever sits behind a TLS-terminating
+// reverse proxy in production, set HSTS there instead.
+app.use(helmet({ hsts: false }));
 app.use(express.json());
 
 app.use(cors({

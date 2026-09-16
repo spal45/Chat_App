@@ -1,6 +1,6 @@
 import { Message } from '@/app/chat/page';
 import { User } from '@/context/AppContext';
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import moment from 'moment'
 import { Check, CheckCheck } from 'lucide-react';
 
@@ -8,12 +8,22 @@ interface ChatMessagesProps{
   selectedUser: string | null;
   messages: Message[] | null;
   loggedInUser: User | null;
+  hasMore?: boolean;
+  loadingOlder?: boolean;
+  onLoadOlder?: () => void;
 }
 
-const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProps) => {
+const ChatMessages = ({ selectedUser, messages, loggedInUser, hasMore, loadingOlder, onLoadOlder }: ChatMessagesProps) => {
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef(0);
+  const isPrependingRef = useRef(false);
+  // becomes true once the initial (instant) scroll-to-bottom has settled for the
+  // current chat - guards against the smooth-scroll animation on chat-open
+  // passing through the "near top" zone and spuriously triggering onLoadOlder
+  const readyRef = useRef(false);
+
   //Seen feature
   const uniqueMessages = useMemo(() => {
     if (!messages) return [];
@@ -29,16 +39,48 @@ const ChatMessages = ({ selectedUser, messages, loggedInUser }: ChatMessagesProp
   }, [messages]);
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    readyRef.current = false;
+  }, [selectedUser]);
+
+  const handleScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el || !onLoadOlder || !hasMore || loadingOlder || !readyRef.current) return;
+
+    if (el.scrollTop < 60) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      isPrependingRef.current = true;
+      onLoadOlder();
     }
-  }, [selectedUser, uniqueMessages,uniqueMessages]);
+  };
+
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !isPrependingRef.current) return;
+
+    el.scrollTop = el.scrollHeight - prevScrollHeightRef.current;
+  }, [uniqueMessages]);
+
+  useEffect(() => {
+    if (isPrependingRef.current) {
+      isPrependingRef.current = false;
+      return;
+    }
+    if (uniqueMessages.length === 0) return;
+
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: readyRef.current ? 'smooth' : 'auto' });
+    }
+    readyRef.current = true;
+  }, [selectedUser, uniqueMessages]);
   return (
     <div className="flex-1 min-h-0 overflow-hidden">
-      <div className="h-full overflow-y-auto p-2 space-y-2 custom-scroll">
+      <div ref={scrollContainerRef} onScroll={handleScroll} className="h-full overflow-y-auto p-2 space-y-2 custom-scroll">
         {
           !selectedUser ? <p className="text-text-muted text-center mt-20">Select a conversation to start chatting.</p> :
           <>
+          {loadingOlder && (
+            <p className="text-text-muted text-xs text-center py-2">Loading older messages...</p>
+          )}
           {
             uniqueMessages?.map((e,i) => {
               const isSentByMe = e.sender === loggedInUser?._id;

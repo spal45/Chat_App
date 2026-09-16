@@ -43,7 +43,15 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
         return;
     }
 
-    const chats = await Chat.find({ users: userId }).sort({ updatedAt: -1 });
+    const pageParam = Number(req.query.page);
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const limitParam = Number(req.query.limit);
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 20;
+    const skip = (page - 1) * limit;
+
+    const totalChats = await Chat.countDocuments({ users: userId });
+    const chats = await Chat.find({ users: userId }).sort({ updatedAt: -1 }).skip(skip).limit(limit);
+    const hasMore = skip + chats.length < totalChats;
 
     const chatWithUserData = await Promise.all(chats.map(async (chat) => {
         const otherUserId = chat.users.find(id => id !== userId);
@@ -85,7 +93,8 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
     }))
 
     res.json({
-        chats: chatWithUserData
+        chats: chatWithUserData,
+        hasMore,
     })
 });
 
@@ -217,6 +226,10 @@ export const getMessagesByChat = TryCatch(
         const userId = req.user?._id;
         const { chatId } = req.params;
 
+        const limitParam = Number(req.query.limit);
+        const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : 30;
+        const before = typeof req.query.before === "string" ? req.query.before : undefined;
+
         if(!userId){
             res.status(401).json({
                 message: "Unauthorized",
@@ -265,7 +278,17 @@ export const getMessagesByChat = TryCatch(
             seenAt: new Date()
         })
 
-        const messages = await Messages.find({chatId}).sort({createdAt: 1});
+        const filter: any = { chatId };
+        if (before) {
+            const beforeMessage = await Messages.findById(before);
+            if (beforeMessage) {
+                filter.createdAt = { $lt: beforeMessage.createdAt };
+            }
+        }
+
+        const olderFirst = await Messages.find(filter).sort({ createdAt: -1 }).limit(limit + 1);
+        const hasMore = olderFirst.length > limit;
+        const messages = olderFirst.slice(0, limit).reverse();
 
         const otherUserId = chat.users.find((id)=> id !== userId);
 
@@ -299,12 +322,14 @@ export const getMessagesByChat = TryCatch(
             }
             res.json({
                 messages,
+                hasMore,
                 user: data,
             });
         }catch(error){
             console.log(error)
             res.json({
                 messages,
+                hasMore,
                 user: {_id: otherUserId, name: "Unknown User"}
             })
         }

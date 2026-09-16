@@ -11,6 +11,9 @@ interface ChatSidebarProps {
     users: User[] | null;
     loggedInUser: User | null;
     chats: any[] | null;
+    hasMoreChats?: boolean;
+    loadingMoreChats?: boolean;
+    onLoadMoreChats?: () => void;
     selectedUser: string | null;
     setSelectedUser: (userId: string | null) => void;
     handleLogout: () => void;
@@ -26,6 +29,9 @@ const ChatSidebar = ({
     users,
     loggedInUser,
     chats,
+    hasMoreChats,
+    loadingMoreChats,
+    onLoadMoreChats,
     selectedUser,
     setSelectedUser,
     handleLogout,
@@ -148,6 +154,15 @@ const ChatSidebar = ({
                                         </div>
                                     </button>
                                 })}
+                                {hasMoreChats && (
+                                    <button
+                                        onClick={onLoadMoreChats}
+                                        disabled={loadingMoreChats}
+                                        className="w-full text-center py-2 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors"
+                                    >
+                                        {loadingMoreChats ? "Loading..." : "Load more"}
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-center">
