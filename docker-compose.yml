@@ -1,0 +1,133 @@
+# Brings up the full stack: MongoDB, Redis, RabbitMQ, the three
+# backend services, and the frontend.
+#
+# Setup:
+#   cp .env.example .env
+#   cp backend/chat/.env.example backend/chat/.env   # fill in Cloudinary creds
+#   cp backend/mail/.env.example backend/mail/.env   # fill in SMTP creds
+#   docker compose up --build
+#
+# user-service and mail-service don't need their own .env for this to
+# work - docker-compose supplies everything they need directly below.
+# chat-service and mail-service still need their .env files for
+# secrets that only they use (Cloudinary, SMTP) and that have no
+# sensible default.
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: chatapp-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: chatapp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: chatapp-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  user-service:
+    build: ./backend/user
+    container_name: chatapp-user-service
+    restart: unless-stopped
+    environment:
+      PORT: 5003
+      MONGO_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379
+      Rabbitmq_Host: rabbitmq
+      Rabbitmq_Username: ${RABBITMQ_DEFAULT_USER:-guest}
+      Rabbitmq_Password: ${RABBITMQ_DEFAULT_PASS:-guest}
+      JWT_SECRET: ${JWT_SECRET}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+    ports:
+      - "5003:5003"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  chat-service:
+    build: ./backend/chat
+    container_name: chatapp-chat-service
+    restart: unless-stopped
+    env_file:
+      - ./backend/chat/.env
+    environment:
+      PORT: 5004
+      MONGO_URI: mongodb://mongo:27017
+      JWT_SECRET: ${JWT_SECRET}
+      USER_SERVICE: http://user-service:5003
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+    ports:
+      - "5004:5004"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+
+  mail-service:
+    build: ./backend/mail
+    container_name: chatapp-mail-service
+    restart: unless-stopped
+    env_file:
+      - ./backend/mail/.env
+    environment:
+      Rabbitmq_Host: rabbitmq
+      Rabbitmq_Username: ${RABBITMQ_DEFAULT_USER:-guest}
+      Rabbitmq_Password: ${RABBITMQ_DEFAULT_PASS:-guest}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: chatapp-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - user-service
+      - chat-service
+
+volumes:
+  mongo-data:
+  redis-data:
+  rabbitmq-data:
