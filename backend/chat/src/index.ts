@@ -8,9 +8,15 @@ import { app, server } from './config/socket.js';
 dotenv.config();
 connectDb();
 
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim());
+
 app.use(express.json());
 
-app.use(cors())
+app.use(cors({
+    origin: allowedOrigins,
+}))
 
 app.use("/api/v1", chatRoutes);
 

@@ -5,6 +5,8 @@ import { redisClient } from "../index.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
 import { User } from "../model/User.js";
 
+const MAX_OTP_ATTEMPTS = 5;
+
 export const loginUser = TryCatch(async(req,res)=>{
     const {email} = req.body
 
@@ -20,9 +22,12 @@ export const loginUser = TryCatch(async(req,res)=>{
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const otpKey = `otp:${email}`
+    const attemptsKey = `otp:attempts:${email}`
+
     await redisClient.set(otpKey,otp,{
         EX:300,
     });
+    await redisClient.del(attemptsKey);
 
     await redisClient.set(rateLimitKey, "true", {
         EX: 60,
@@ -52,10 +57,32 @@ export const verifyUser = TryCatch(async(req,res)=>{
     }
 
     const otpKey = `otp:${email}`
+    const attemptsKey = `otp:attempts:${email}`
 
     const storedOtp = await redisClient.get(otpKey);
 
-    if(!storedOtp || storedOtp !== enteredOtp){
+    if(!storedOtp){
+        res.status(400).json({
+            message: "Invalid or expired OTP",
+        });
+        return;
+    }
+
+    const attempts = await redisClient.incr(attemptsKey);
+    if(attempts === 1){
+        await redisClient.expire(attemptsKey, 300);
+    }
+
+    if(attempts > MAX_OTP_ATTEMPTS){
+        await redisClient.del(otpKey);
+        await redisClient.del(attemptsKey);
+        res.status(429).json({
+            message: "Too many incorrect attempts. Please request a new OTP",
+        });
+        return;
+    }
+
+    if(storedOtp !== enteredOtp){
         res.status(400).json({
             message: "Invalid or expired OTP",
         });
@@ -63,6 +90,7 @@ export const verifyUser = TryCatch(async(req,res)=>{
     }
 
     await redisClient.del(otpKey)
+    await redisClient.del(attemptsKey)
 
     let user = await User.findOne({email})
 
@@ -107,7 +135,7 @@ export const updateName = TryCatch(async(req: AuthenticatedRequest, res)=>{
 });
 
 export const getAllUsers = TryCatch(async (req: AuthenticatedRequest, res) => {
-    const users = await User.find();
+    const users = await User.find().select("name");
     res.json(users);
 })
 

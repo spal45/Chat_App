@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { io, Socket } from "socket.io-client"
+import Cookies from "js-cookie";
 import { chat_service, useAppData } from "./AppContext";
 
 interface SocketContextType{
@@ -25,9 +26,13 @@ export const SocketProvider = ({children}: ProviderProps) => {
 
     useEffect(()=>{
         if(!user?._id) return
+
+        const token = Cookies.get("token");
+        if(!token) return
+
         const newSocket = io(chat_service, {
-            query: {
-                userId: user._id
+            auth: {
+                token
             }
         });
 
@@ -35,6 +40,10 @@ export const SocketProvider = ({children}: ProviderProps) => {
 
         newSocket.on("getOnlineUser", (users: string[])=>{
             setOnlineUsers(users);
+        });
+
+        newSocket.on("connect_error", (error)=>{
+            console.log("Socket connection error", error.message);
         });
 
         return ()=>{

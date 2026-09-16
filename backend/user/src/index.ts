@@ -20,10 +20,16 @@ redisClient
     .then(()=>console.log("connected to redis"))
     .catch((err)=>console.error(err))
 
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim());
+
 const app = express()
 app.use(express.json());
 
-app.use(cors());
+app.use(cors({
+    origin: allowedOrigins,
+}));
 
 app.use("/api/v1", userRoutes);
 
