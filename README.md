@@ -21,7 +21,7 @@ Login is passwordless (email OTP), so to let anyone try it without needing a rea
 | Email | OTP |
 |---|---|
 | `demo@chatapp.dev` | `123456` |
-| `recruiter@chatapp.dev` | `654321` |
+| `demo2@chatapp.dev` | `654321` |
 
 They already have a chat going with a few messages, so there's history to see immediately. Every other email goes through the real flow (random OTP, actually emailed).
 
