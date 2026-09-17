@@ -7,6 +7,19 @@ import { User } from "../model/User.js";
 
 const MAX_OTP_ATTEMPTS = 5;
 
+// Designated demo accounts get a fixed, publicly-documented OTP instead of
+// a random one, and skip real email delivery entirely - lets anyone (e.g.
+// a recruiter) try the app, including messaging between two accounts,
+// without needing real inboxes or working email infrastructure. Only
+// these exact addresses are special-cased; every other email goes
+// through the normal random-OTP + real-email flow.
+const DEMO_ACCOUNTS: { email: string; otp: string }[] = [
+    [process.env.DEMO_EMAIL, process.env.DEMO_OTP],
+    [process.env.DEMO_EMAIL_2, process.env.DEMO_OTP_2],
+]
+    .filter((pair): pair is [string, string] => !!pair[0] && !!pair[1])
+    .map(([email, otp]) => ({ email: email.toLowerCase(), otp }));
+
 export const loginUser = TryCatch(async(req,res)=>{
     const {email} = req.body
 
@@ -20,17 +33,11 @@ export const loginUser = TryCatch(async(req,res)=>{
         return;
     }
 
-    // A designated demo account gets a fixed, publicly-documented OTP
-    // instead of a random one, and skips real email delivery entirely -
-    // lets anyone (e.g. a recruiter) try the app without needing a real
-    // inbox or working email infrastructure. Only this one specific
-    // address is special-cased; every other email goes through the
-    // normal random-OTP + real-email flow below.
-    const isDemoAccount = !!process.env.DEMO_EMAIL && !!process.env.DEMO_OTP
-        && email?.toLowerCase() === process.env.DEMO_EMAIL.toLowerCase();
+    const demoAccount = DEMO_ACCOUNTS.find((a) => a.email === email?.toLowerCase());
+    const isDemoAccount = !!demoAccount;
 
-    const otp = isDemoAccount
-        ? process.env.DEMO_OTP!
+    const otp = demoAccount
+        ? demoAccount.otp
         : Math.floor(100000 + Math.random() * 900000).toString()
     const otpKey = `otp:${email}`
     const attemptsKey = `otp:attempts:${email}`

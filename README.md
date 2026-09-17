@@ -16,12 +16,14 @@ A real-time messaging platform built as a microservices system: a Next.js fronte
 
 **[chatapp on Railway](https://frontend-production-35dc.up.railway.app)** — the frontend, all three backend services, and Socket.IO are deployed and running for real (MongoDB Atlas, Upstash Redis, CloudAMQP).
 
-Login is passwordless (email OTP), so to let anyone try it without needing a real inbox, there's a demo account with a fixed code instead of a randomly emailed one:
+Login is passwordless (email OTP), so to let anyone try it without needing a real inbox, there are two demo accounts with fixed codes instead of randomly emailed ones — log into both (e.g. one in a normal window, one in an incognito window) to try real-time messaging between them:
 
-- **Email:** `demo@chatapp.dev`
-- **OTP:** `123456`
+| Email | OTP |
+|---|---|
+| `demo@chatapp.dev` | `123456` |
+| `recruiter@chatapp.dev` | `654321` |
 
-Every other email goes through the real flow (random OTP, actually emailed).
+They already have a chat going with a few messages, so there's history to see immediately. Every other email goes through the real flow (random OTP, actually emailed).
 
 ## Why microservices, here
 
