@@ -20,7 +20,18 @@ export const loginUser = TryCatch(async(req,res)=>{
         return;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    // A designated demo account gets a fixed, publicly-documented OTP
+    // instead of a random one, and skips real email delivery entirely -
+    // lets anyone (e.g. a recruiter) try the app without needing a real
+    // inbox or working email infrastructure. Only this one specific
+    // address is special-cased; every other email goes through the
+    // normal random-OTP + real-email flow below.
+    const isDemoAccount = !!process.env.DEMO_EMAIL && !!process.env.DEMO_OTP
+        && email?.toLowerCase() === process.env.DEMO_EMAIL.toLowerCase();
+
+    const otp = isDemoAccount
+        ? process.env.DEMO_OTP!
+        : Math.floor(100000 + Math.random() * 900000).toString()
     const otpKey = `otp:${email}`
     const attemptsKey = `otp:attempts:${email}`
 
@@ -33,15 +44,20 @@ export const loginUser = TryCatch(async(req,res)=>{
         EX: 60,
     });
 
-    const message = {
-        to: email,
-        subject: "Your otp code",
-        body: `Your OTP is ${otp}. It is valid for 5 minutes`
-    };
+    if(!isDemoAccount){
+        const message = {
+            to: email,
+            subject: "Your otp code",
+            body: `Your OTP is ${otp}. It is valid for 5 minutes`
+        };
 
-    await publishToQueue("send-otp", message)
+        await publishToQueue("send-otp", message)
+    }
+
     res.status(200).json({
-        message: "OTP sent to your mail"
+        message: isDemoAccount
+            ? "Demo account - use the published demo OTP"
+            : "OTP sent to your mail"
     })
 });
 

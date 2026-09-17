@@ -1,26 +1,42 @@
 import amqp from 'amqplib'
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import dns from 'dns'
 
 dotenv.config()
+
+// Some container platforms (Railway included) resolve hostnames to IPv6
+// first but can't actually route IPv6 egress, so an SMTP connection to a
+// dual-stack host like smtp.gmail.com hangs until ETIMEDOUT/ENETUNREACH.
+// Force IPv4 resolution to avoid it.
+dns.setDefaultResultOrder('ipv4first')
 
 
 export const startSendOtpConsumer = async()=>{
     try{
+        // RABBITMQ_URL (a full amqp:// or amqps:// connection string, as
+        // managed providers like CloudAMQP give you) takes priority. Falls
+        // back to discrete host/user/password for local dev and the
+        // docker-compose stack, where the port is always plain amqp:5672.
+        const url = process.env.RABBITMQ_URL;
         const hostname = process.env.Rabbitmq_Host;
         const username = process.env.Rabbitmq_Username;
         const password = process.env.Rabbitmq_Password;
 
-        if (!hostname || !username || !password) {
+        let connection;
+        if (url) {
+            connection = await amqp.connect(url);
+        } else if (hostname && username && password) {
+            connection = await amqp.connect({
+                protocol: "amqp",
+                hostname,
+                port: 5672,
+                username,
+                password
+            });
+        } else {
             throw new Error('Missing RabbitMQ configuration');
         }
-        const connection = await amqp.connect({
-            protocol: "amqp",
-            hostname,
-            port: 5672,
-            username,
-            password
-        })
 
         const channel = await connection.createChannel()
         const queueName = "send-otp"

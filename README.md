@@ -12,6 +12,17 @@ A real-time messaging platform built as a microservices system: a Next.js fronte
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
+## Live demo
+
+**[chatapp on Railway](https://frontend-production-35dc.up.railway.app)** — the frontend, all three backend services, and Socket.IO are deployed and running for real (MongoDB Atlas, Upstash Redis, CloudAMQP).
+
+Login is passwordless (email OTP), so to let anyone try it without needing a real inbox, there's a demo account with a fixed code instead of a randomly emailed one:
+
+- **Email:** `demo@chatapp.dev`
+- **OTP:** `123456`
+
+Every other email goes through the real flow (random OTP, actually emailed).
+
 ## Why microservices, here
 
 This is a small app — a single Express server could easily hold auth, chat, and mail. I split it into three services anyway, on purpose, to work through the problems that split actually creates: services need to authenticate each other's tokens without sharing a database, one service calling another over HTTP needs to handle that call failing gracefully, and a WebSocket gateway needs its own authentication story separate from the REST API's. Those are the problems this repo is set up to demonstrate solving, not to pretend this traffic volume needs four deployables.
@@ -88,6 +99,8 @@ These are real issues found and fixed during this project's development, not hyp
 
 **A filename-casing bug macOS was hiding.** One component file was tracked in git with different casing (`verifyOtp.tsx`) than the actual file and its import statement (`VerifyOtp.tsx`) used. macOS's case-insensitive filesystem papers over the mismatch completely — but a fresh clone on any case-sensitive filesystem (which is to say, virtually any Linux CI runner or deploy target) would fail to resolve that import. Found by inspecting `git ls-files` directly, not by anything failing locally.
 
+**Deploying surfaced a platform limitation no amount of local testing would have caught.** OTP email worked in every environment I'd tested — local, Docker Compose — then failed on Railway with a bare `ETIMEDOUT`. The first log line pointed at an IPv6 address (`ENETUNREACH ...:465`), which looked like a DNS-resolution-order bug, so I fixed that (`dns.setDefaultResultOrder('ipv4first')`) and redeployed. It failed again, this time over IPv4, ruling that theory out and pointing at something more fundamental: Railway, like most PaaS providers, blocks outbound SMTP ports by default as an anti-abuse measure, which no amount of code-level fixing was going to work around. Rather than switch to an HTTP-based email API mid-task, I scoped a smaller fix: a designated demo account with a fixed, published OTP that skips the email queue entirely, so the deployed app stays usable while the real fix is a clearly-documented follow-up rather than a silent gap.
+
 ## Tech stack
 
 | Layer | Technology |
@@ -135,7 +148,7 @@ Documented honestly rather than left implicit:
 - **No automated test suite yet.** The auth flow, chat-membership checks, and the pagination logic above are exactly the kind of thing worth covering first.
 - **No CI pipeline yet.** Would have caught the missing `typescript` dependency automatically instead of requiring a manual Docker build to surface it.
 - **Socket state is single-instance.** The online-user map lives in the chat service's memory, which is fine for one instance and wouldn't survive horizontally scaling it — that would need to move to Redis pub/sub.
-- **Not deployed anywhere public yet.** Runs locally via Docker Compose; the services are container-ready but nothing is wired to a hosting provider.
+- **Real (non-demo) OTP email doesn't currently work on the live deployment.** Railway blocks outbound SMTP by default (a common anti-abuse policy on PaaS platforms), so Gmail SMTP delivery times out there even though it works locally and in Docker Compose. The fix is to send through an HTTP-based email API (e.g. Resend) instead of raw SMTP — not yet done. The demo account above sidesteps this entirely rather than papering over it.
 
 ## License
 
