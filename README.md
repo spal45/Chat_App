@@ -10,7 +10,6 @@ A real-time messaging platform built as a microservices system: a Next.js fronte
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-black?logo=socket.io&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Live demo
 
@@ -151,7 +150,3 @@ Documented honestly rather than left implicit:
 - **No CI pipeline yet.** Would have caught the missing `typescript` dependency automatically instead of requiring a manual Docker build to surface it.
 - **Socket state is single-instance.** The online-user map lives in the chat service's memory, which is fine for one instance and wouldn't survive horizontally scaling it — that would need to move to Redis pub/sub.
 - **Real (non-demo) OTP email doesn't currently work on the live deployment.** Railway blocks outbound SMTP by default (a common anti-abuse policy on PaaS platforms), so Gmail SMTP delivery times out there even though it works locally and in Docker Compose. The fix is to send through an HTTP-based email API (e.g. Resend) instead of raw SMTP — not yet done. The demo account above sidesteps this entirely rather than papering over it.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
