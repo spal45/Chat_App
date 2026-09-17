@@ -14,7 +14,7 @@ A real-time messaging platform built as a microservices system: a Next.js fronte
 
 ## Live demo
 
-**[chatapp on Railway](https://frontend-production-35dc.up.railway.app)** — the frontend, all three backend services, and Socket.IO are deployed and running for real (MongoDB Atlas, Upstash Redis, CloudAMQP).
+**[chatapp on Railway](https://chatapp-sp.up.railway.app)** — the frontend, all three backend services, and Socket.IO are deployed and running for real (MongoDB Atlas, Upstash Redis, CloudAMQP).
 
 Login is passwordless (email OTP), so to let anyone try it without needing a real inbox, there are two demo accounts with fixed codes instead of randomly emailed ones — log into both (e.g. one in a normal window, one in an incognito window) to try real-time messaging between them:
 
